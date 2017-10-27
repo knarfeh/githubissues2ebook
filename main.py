@@ -8,59 +8,107 @@ import json
 import requests
 from requests.utils import parse_header_links
 
+from elasticsearch import Elasticsearch
+from elasticsearch import helpers
+
 URL = os.getenv('URL', 'https://github.com/lifesinger/blog/issues')
 
 REPO_NAMESPACE = os.getenv('REPO_NAMESPACE', 'lifesinger')
 REPO_NAME = os.getenv('REPO_NAME', 'blog')
 QUERY_STRING = os.getenv('QUERY_STRING', 'state=open')
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+DAY_TIME_STAMP = os.getenv('DAY_TIME_STAMP')
+ES_HOST_PORT = os.getenv('ES_HOST_PORT', 'http://192.168.199.121:9200')
+
 
 def _get_doc_source(issue):
     source = dict()
-    author = issue['user']['login']
-    title = issue['title']
-    comments_url = issue['comments_url']
-
     content_list = list()
     content_list.append({
-        'author': author,
-        'content': 'issue content'
+        'author': issue['user']['login'],
+        'content': issue['body']
     })
+
+    comments_url = issue['comments_url']
     print('comments_url: {}'.format(comments_url))
-    r = requests.get(comments_url)
+    r = requests.get(comments_url, auth=('eebook', GITHUB_TOKEN))
     comments = json.loads(r.text)
     for comment in comments:
         content_list.append({
             'author': comment['user']['login'],
-            'content': 'comment content'
+            'content': comment['body']
         })
     source = {
-        "author": author,
-        "title": title,
+        "author": issue['user']['login'],
+        "title": issue['title'],
+        "dayTimestamp": DAY_TIME_STAMP,
         "content": content_list
     }
     return source
 
 def main():
     url = 'https://api.github.com/repos/' + REPO_NAMESPACE + '/' + REPO_NAME + '/issues?' + QUERY_STRING
-    r = requests.get(url)
+    r = requests.get(url, auth=('eebook', GITHUB_TOKEN))
     issues = json.loads(r.text)
+    es = Elasticsearch([ES_HOST_PORT])
+    bulk_data = list()
     for item in issues:
         source_doc = _get_doc_source(item)
-        print(item['url'])
-    print(source_doc)
+        bulk_data.append({
+            '_index': 'github',
+            '_type': URL + ':content',
+            '_id': item['id'],
+            '_op_type': 'update',
+            '_source': {'doc': source_doc, 'doc_as_upsert': True}
+        })
+
+    helpers.bulk(es, bulk_data)
+
     links = parse_header_links(r.headers['link'])
     last_url = [item['url'] for item in links if item['rel']=='last'][0]
     last_page = int(last_url[last_url.rfind('page=')+5:])
     page = 2
-    # while page <= last_page:
-    #     now_url = url + '&page=' + str(page)
-    #     print('Now url: {}'.format(now_url))
-    #     r = requests.get(now_url)
-    #     issues = json.loads(r.text)
-    #     for item in issues:
-    #         _ = _get_doc_source(item)
-    #         print(item['url'])
-    #     page += 1
+    while page <= last_page:
+        now_url = url + '&page=' + str(page)
+        print('Now url: {}'.format(now_url))
+        r = requests.get(now_url)
+        issues = json.loads(r.text)
+        for item in issues:
+            source_doc = _get_doc_source(item)
+            bulk_data.append({
+                '_index': 'github',
+                '_type': URL + ':content',
+                '_id': item['id'],
+                '_op_type': 'update',
+                '_source': {'doc': source_doc, 'doc_as_upsert': True}
+            })
+            page += 1
+    bulk_data.append({
+        '_index': 'eebook',
+        '_type': 'metadata',
+        '_id': URL,
+        '_op_type': 'update',
+        '_source': {
+            'doc': {
+                'type': 'github',
+                'title': REPO_NAMESPACE + '-' + REPO_NAME + '-githubissueseebook-' + DAY_TIME_STAMP,
+                'book_desp': 'TODO',
+                'created_by': 'knarfeh',
+                'query': {
+                    'bool': {
+                        'must':[
+                            {
+                                "terms": {
+                                    "dayTimestamp": [DAY_TIME_STAMP]
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            'doc_as_upsert': True}
+    })
+    helpers.bulk(es, bulk_data)
 
 
 if __name__ == "__main__":
