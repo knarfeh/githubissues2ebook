@@ -67,6 +67,7 @@ def main():
     links = parse_header_links(r.headers['link'])
     last_url = [item['url'] for item in links if item['rel']=='last'][0]
     last_page = int(last_url[last_url.rfind('page=')+5:])
+    print("Total page of issues: {}".format(last_page))
     page = 2
     while page <= last_page:
         now_url = url + '&page=' + str(page)
@@ -82,7 +83,7 @@ def main():
                 '_op_type': 'update',
                 '_source': {'doc': source_doc, 'doc_as_upsert': True}
             })
-            page += 1
+        page += 1
     bulk_data.append({
         '_index': 'eebook',
         '_type': 'metadata',
