@@ -12,15 +12,14 @@ from elasticsearch import Elasticsearch
 from elasticsearch import helpers
 
 URL = os.getenv('URL', 'https://github.com/lifesinger/blog/issues')
-
-# TODO: we dont need it
-REPO_NAMESPACE = os.getenv('REPO_NAMESPACE', 'lifesinger')
-REPO_NAME = os.getenv('REPO_NAME', 'blog')
 QUERY_STRING = os.getenv('QUERY_STRING', 'state=open')
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
-
 DAY_TIME_STAMP = os.getenv('DAY_TIME_STAMP')
-ES_HOST_PORT = os.getenv('ES_HOST_PORT', 'http://192.168.199.121:9200')
+ES_HOST_PORT = os.getenv('ES_HOST_PORT')
+
+repo_name_list = URL[URL.find('github.com')+len('github.com'):URL.find('issues')].split('/')
+REPO_NAMESPACE = repo_name_list[1]
+REPO_NAME = repo_name_list[2]
 
 
 def _get_doc_source(issue):
@@ -94,7 +93,7 @@ def main():
         '_source': {
             'doc': {
                 'type': 'github',
-                'title': REPO_NAMESPACE + '-' + REPO_NAME + '-githubissueseebook-' + DAY_TIME_STAMP,
+                'title': REPO_NAMESPACE + '-' + REPO_NAME + '-githubissueseebook-' DAY_TIME_STAMP,
                 'book_desp': 'TODO',
                 'created_by': 'knarfeh',
                 'query': {
@@ -109,7 +108,8 @@ def main():
                     }
                 }
             },
-            'doc_as_upsert': True}
+            'doc_as_upsert': True
+        }
     })
     helpers.bulk(es, bulk_data)
 
