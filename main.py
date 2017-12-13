@@ -13,10 +13,12 @@ from elasticsearch import helpers
 
 URL = os.getenv('URL', 'https://github.com/lifesinger/blog/issues')
 
+# TODO: we dont need it
 REPO_NAMESPACE = os.getenv('REPO_NAMESPACE', 'lifesinger')
 REPO_NAME = os.getenv('REPO_NAME', 'blog')
 QUERY_STRING = os.getenv('QUERY_STRING', 'state=open')
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+
 DAY_TIME_STAMP = os.getenv('DAY_TIME_STAMP')
 ES_HOST_PORT = os.getenv('ES_HOST_PORT', 'http://192.168.199.121:9200')
 
