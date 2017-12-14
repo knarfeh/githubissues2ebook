@@ -93,7 +93,7 @@ def main():
         '_source': {
             'doc': {
                 'type': 'github',
-                'title': REPO_NAMESPACE + '-' + REPO_NAME + '-githubissueseebook-' DAY_TIME_STAMP,
+                'title': REPO_NAMESPACE + '-' + REPO_NAME + '-githubissueseebook-' + DAY_TIME_STAMP,
                 'book_desp': 'TODO',
                 'created_by': 'knarfeh',
                 'query': {
