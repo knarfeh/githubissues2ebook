@@ -10,17 +10,18 @@ from requests.utils import parse_header_links
 
 from elasticsearch import Elasticsearch
 from elasticsearch import helpers
+from utils import str2bool
 
 URL = os.getenv('URL', 'https://github.com/lifesinger/blog/issues')
 QUERY_STRING = os.getenv('QUERY_STRING', 'state=open')
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 DAY_TIME_STAMP = os.getenv('DAY_TIME_STAMP')
 ES_HOST_PORT = os.getenv('ES_HOST_PORT')
+INCLUDE_COMMENTS = str2bool(os.getenv('INCLUDE_COMMENTS'))
 
 repo_name_list = URL[URL.find('github.com')+len('github.com'):URL.find('issues')].split('/')
 REPO_NAMESPACE = repo_name_list[1]
 REPO_NAME = repo_name_list[2]
-
 
 def _get_doc_source(issue):
     source = dict()
@@ -30,15 +31,16 @@ def _get_doc_source(issue):
         'content': issue['body']
     })
 
-    comments_url = issue['comments_url']
-    print('comments_url: {}'.format(comments_url))
-    r = requests.get(comments_url, auth=('eebook', GITHUB_TOKEN))
-    comments = json.loads(r.text)
-    for comment in comments:
-        content_list.append({
-            'author': comment['user']['login'],
-            'content': comment['body']
-        })
+    if INCLUDE_COMMENTS is True:
+        comments_url = issue['comments_url']
+        print('comments_url: {}'.format(comments_url))
+        r = requests.get(comments_url, auth=('eebook', GITHUB_TOKEN))
+        comments = json.loads(r.text)
+        for comment in comments:
+            content_list.append({
+                'author': comment['user']['login'],
+                'content': comment['body']
+            })
     source = {
         "author": issue['user']['login'],
         "title": issue['title'],
