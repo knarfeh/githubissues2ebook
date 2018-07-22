@@ -67,9 +67,12 @@ def main():
 
     helpers.bulk(es, bulk_data)
 
-    links = parse_header_links(r.headers['link'])
-    last_url = [item['url'] for item in links if item['rel']=='last'][0]
-    last_page = int(last_url[last_url.rfind('page=')+5:])
+    last_page = 1
+    if r.headers.get("link", None) is not None:
+        links = parse_header_links(r.headers['link'])
+        last_url = [item['url'] for item in links if item['rel']=='last'][0]
+        last_page = int(last_url[last_url.rfind('page=')+5:])
+        
     print("Total page of issues: {}".format(last_page))
     page = 2
     while page <= last_page:
@@ -117,4 +120,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print("githubissueseebook running...")
     main()

@@ -1,39 +1,15 @@
 version: '2'
 services:
-  elasticsearch:
-    build: ../devbox/es-related/dockerfiles/dev/elasticsearch/
-    volumes:
-      - ../devbox/es-related/dockerfiles/dev/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
-      - ../devbox/container-data/elasticsearch:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    environment:
-      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-    networks:
-      - githubissueseebook
-  kibana:
-    build: ../devbox/es-related/dockerfiles/dev/kibana/
-    volumes:
-      - ../devbox/es-related/dockerfiles/dev/kibana/config/:/usr/share/kibana/config
-    ports:
-      - "5601:5601"
-    depends_on:
-      - elasticsearch
-    networks:
-      - githubissueseebook
   githubissueseebook:
     image: knarfeh/githubissueseebook
     build: .
     volumes:
       - .:/src
-    depends_on:
-      - elasticsearch
     environment:
-      - URL=https://github.com/kittencup/angular2-ama-cn/issues
-      - QUERY_STRING=state=open
-      - DAY_TIME_STAMP=2017-12-21
-      - ES_HOST_PORT=http://elasticsearch:9200
+      - URL=https://github.com/olebedev/go-starter-kit/issues
+        #- QUERY_STRING=state=open
+      - DAY_TIME_STAMP=2018-07-23
+      - ES_HOST_PORT=http://192.168.199.121:9200
       - INCLUDE_COMMENTS=true
     env_file:
       - envs/secret.env
