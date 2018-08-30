@@ -98,7 +98,7 @@ def main():
         '_source': {
             'doc': {
                 'type': 'github',
-                'title': REPO_NAMESPACE + '-' + REPO_NAME + '-githubissueseebook-' + DAY_TIME_STAMP,
+                'title': REPO_NAMESPACE + '-' + REPO_NAME + '-githubissues2ebook-' + DAY_TIME_STAMP,
                 'book_desp': 'TODO',
                 'created_by': 'knarfeh',
                 'query': {
@@ -120,5 +120,5 @@ def main():
 
 
 if __name__ == "__main__":
-    print("githubissueseebook running...")
+    print("githubissues2ebook running...")
     main()

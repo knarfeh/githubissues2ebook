@@ -1,7 +1,7 @@
 version: '2'
 services:
   githubissueseebook:
-    image: knarfeh/githubissueseebook
+    image: knarfeh/githubissues2ebook
     build: .
     volumes:
       - .:/src
@@ -14,8 +14,8 @@ services:
     env_file:
       - envs/secret.env
     networks:
-      - githubissueseebook
+      - githubissues2ebook
 
 networks:
-  githubissueseebook:
+  githubissues2ebook:
     driver: bridge
